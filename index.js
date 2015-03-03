@@ -8,81 +8,89 @@ module.exports = compute;
 /**
  * Algorithm to compute nice human-readable intervals.
  *
- * @param {Integer} count The number of intervals that should appear in the axis.
- * @param {Integer} max The biggest value to appear in the plot.
+ * @param {Object} opts
+ *   @property {Integer} segments The number of intervals that should appear in the axis.
+ *   @property {Integer} max The biggest value to appear in the plot.
+ *   @property {Integer} threshold How close you want the max to be to the end of the graph ideally.
  * @return {Array}
  */
 
-function compute(count, max) {
-  var upperMagnitude = roundedOrderOfMagnitude(max);
-  var lowerMagnitude = orderOfMagnitude(max);
-  var attempts = [ 10, 5, 2, 1 ]; // how humans sorta think of pretty labels.
-  var i = attempts.length;
-  var multipliers = [];
-  // if the rounded-up version is not an integer, then ignore
-  var check = upperMagnitude / count;
-  if (check === parseInt(check)) multipliers.push(upperMagnitude);
-  while (--i) multipliers.push(attempts[i] * lowerMagnitude * count);
-  multipliers = multipliers.sort(sortByNumber);
-  var i = multipliers.length;
-  var multiplier = multiplier = multipliers[--i];
-  while (multiplier < max) multiplier = multipliers[--i];
-  return build(count, multiplier);
+function compute(opts) {
+  opts = opts || {};
+  var threshold = opts.threshold || 0.5;
+  var segments = opts.segments || 4;
+  var max = opts.value;
+  var a = roundToClosestNaturalPower(max, 3);
+  var b = roundToClosestNaturalPower(max, 4);
+  var c = roundToClosestNaturalPower(max, 5);
+  var e = max / a;
+  var f = max / b;
+  var g = max / c;
+  var x = build(segments, a);
+  var y = build(segments, b);
+  var z = build(segments, c);
+  var q = x.reduce(rank, 1);// Math.abs(threshold - e);
+  var r = y.reduce(rank, 1);// Math.abs(threshold - f);
+  var s = z.reduce(rank, 1);// Math.abs(threshold - g);
+  var min = Math.min(q, r, s); // lowest score wins
+  switch (min) {
+    case q: return x;
+    case r: return y;
+    case s: return z;
+  }
 }
 
 /**
  * Create a set of clean intervals for a graph axis.
  *
- * @param {Integer} count
- * @param {Integer} multiplier
+ * @param {Integer} segments
+ * @param {Integer} range
  * @return {Array} intervals
  */
 
-function build(count, multiplier) {
-  var ratio = multiplier / count;
-  var intervals = new Array(count);
-  while (count--) intervals[count] = (count + 1) * ratio;
+function build(segments, range) {
+  var ratio = range / segments;
+  var intervals = new Array(segments);
+  while (segments--) intervals[segments] = (segments + 1) * ratio;
+  intervals.unshift(0); // always have 0 at the beginning.
   return intervals;
 }
 
 /**
- * Get order of magnitude from an integer.
- *
- * @param {Integer} val
- * @return {Integer}
+ * Attempt at ranking.
  */
 
-function orderOfMagnitude(val) {
-  var order = Math.floor((Math.log(val) / Math.LN10) + 0.000000001);
-  return Math.pow(10, order);
+function rank(score, interval) {
+  var str = interval.toString();
+  var multiplier = str.length;
+  // never use decimals.
+  if (str.match('.')) multiplier *= 1000;
+  // lose points the fewer zeros you have.
+  multiplier *= (10 * ((str.match(/[1-9]+/g) || []).join('').length + 1));
+  return score + multiplier;
 }
 
 /**
- * Nearest order of magnitude after rounding.
+ * Round up to closest "natural" power.
+ *
+ *   298141 -> 300000
+ *   301000 -> 310000
+ *   300001 -> 310000
+ *   300000 -> 300000
+ *   30012 -> 31000
+ *   3012 -> 3100
+ *   3191 -> 3200
+ *   3510 -> 3600
+ *   351 -> 360
  *
  * @param {Integer} val
+ * @param {Integer} factor Values 5, 4, and 3 are good ones to try.
  * @return {Integer}
  */
 
-function roundedOrderOfMagnitude(val) {
-  val = val * 1.0
-  var lowerMagnitude = orderOfMagnitude(val);
-  var upperMagnitude = lowerMagnitude * 10;
-  val = val / upperMagnitude;
-  val = Math.ceil(val);
-  return val // 0 or 1
-    ? upperMagnitude
-    : lowerMagnitude;
-}
-
-/**
- * Sort by number.
- *
- * @param {Integer} a
- * @param {Integer} b
- * @return {Boolean}
- */
-
-function sortByNumber(a, b) {
-  return b - a;
+function roundToClosestNaturalPower(val, factor) {
+  var n = val.toString().length;
+  var multiple = Math.pow(10, n - 2) * (factor * 2);
+  var rounded = Math.ceil(val / multiple) * multiple;
+  return rounded;
 }
