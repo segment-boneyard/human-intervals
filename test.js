@@ -27,6 +27,14 @@ describe('human-intervals', function(){
     assert.deepEqual(humanize(3, max).map(format), [ '200', '400', '600' ]);
     assert.deepEqual(humanize(4, max).map(format), [ '200', '400', '600', '800' ]);
     assert.deepEqual(humanize(5, max).map(format), [ '200', '400', '600', '800', '1K']);
+
+    var values = [ 341, 12, 793, 42, 54, 591, 123, 271, 804, 1293 ];
+    var max = Math.max.apply(Math, values);
+
+    assert.deepEqual(humanize(2, max).map(format), [ '1K', '2K' ]);
+    assert.deepEqual(humanize(3, max).map(format), [ '500', '1K', '1.5K' ]);
+    assert.deepEqual(humanize(4, max).map(format), [ '500', '1K', '1.5K', '2K' ]);
+    assert.deepEqual(humanize(4, max).map(format), [ '500', '1K', '1.5K', '2K', '2.5K' ]);
   });
 });
 
