@@ -14,11 +14,19 @@ module.exports = compute;
  */
 
 function compute(count, max) {
-  var magnitude = roundedOrderOfMagnitude(max);
-  var multiplier = magnitude * count;
-  var attempts = [ 10, 5, 2 ]; // how humans sorta think of pretty labels.
+  var upperMagnitude = roundedOrderOfMagnitude(max);
+  var lowerMagnitude = orderOfMagnitude(max);
+  var attempts = [ 10, 5, 2, 1 ]; // how humans sorta think of pretty labels.
   var i = attempts.length;
-  while (multiplier < max && --i) multiplier *= attempts[i];
+  var multipliers = [];
+  // if the rounded-up version is not an integer, then ignore
+  var check = upperMagnitude / count;
+  if (check === parseInt(check)) multipliers.push(upperMagnitude);
+  while (--i) multipliers.push(attempts[i] * lowerMagnitude * count);
+  multipliers = multipliers.sort(sortByNumber);
+  var i = multipliers.length;
+  var multiplier = multiplier = multipliers[--i];
+  while (multiplier < max) multiplier = multipliers[--i];
   return build(count, multiplier);
 }
 
@@ -31,8 +39,9 @@ function compute(count, max) {
  */
 
 function build(count, multiplier) {
+  var ratio = multiplier / count;
   var intervals = new Array(count);
-  while (count--) intervals[count] = count * multiplier;
+  while (count--) intervals[count] = (count + 1) * ratio;
   return intervals;
 }
 
@@ -50,13 +59,30 @@ function orderOfMagnitude(val) {
 
 /**
  * Nearest order of magnitude after rounding.
+ *
+ * @param {Integer} val
+ * @return {Integer}
  */
 
 function roundedOrderOfMagnitude(val) {
-  var magnitude = orderOfMagnitude(val);
-
-  val = val / magnitude;
+  val = val * 1.0
+  var lowerMagnitude = orderOfMagnitude(val);
+  var upperMagnitude = lowerMagnitude * 10;
+  val = val / upperMagnitude;
   val = Math.ceil(val);
-  val = val * magnitude;
-  return val;
+  return val // 0 or 1
+    ? upperMagnitude
+    : lowerMagnitude;
+}
+
+/**
+ * Sort by number.
+ *
+ * @param {Integer} a
+ * @param {Integer} b
+ * @return {Boolean}
+ */
+
+function sortByNumber(a, b) {
+  return b - a;
 }
