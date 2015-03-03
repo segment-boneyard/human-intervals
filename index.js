@@ -29,9 +29,9 @@ function compute(opts) {
   var x = build(segments, a);
   var y = build(segments, b);
   var z = build(segments, c);
-  var q = x.reduce(rank, 1);// Math.abs(threshold - e);
-  var r = y.reduce(rank, 1);// Math.abs(threshold - f);
-  var s = z.reduce(rank, 1);// Math.abs(threshold - g);
+  var q = x.reduce(rank,  Math.abs(threshold - e));
+  var r = y.reduce(rank,  Math.abs(threshold - f));
+  var s = z.reduce(rank,  Math.abs(threshold - g));
   var min = Math.min(q, r, s); // lowest score wins
   switch (min) {
     case q: return x;
