@@ -20,18 +20,18 @@ function compute(opts) {
   var threshold = opts.threshold || 0.5;
   var segments = opts.segments || 4;
   var max = opts.value;
-  var a = roundToClosestNaturalPower(max, 3);
-  var b = roundToClosestNaturalPower(max, 4);
-  var c = roundToClosestNaturalPower(max, 5);
+  var a = round(max, 3);
+  var b = round(max, 4);
+  var c = round(max, 5);
   var e = max / a;
   var f = max / b;
   var g = max / c;
   var x = build(segments, a);
   var y = build(segments, b);
   var z = build(segments, c);
-  var q = x.reduce(rank,  Math.abs(threshold - e));
-  var r = y.reduce(rank,  Math.abs(threshold - f));
-  var s = z.reduce(rank,  Math.abs(threshold - g));
+  var q = x.reduce(rank, Math.abs(threshold - e));
+  var r = y.reduce(rank, Math.abs(threshold - f));
+  var s = z.reduce(rank, Math.abs(threshold - g));
   var min = Math.min(q, r, s); // lowest score wins
   switch (min) {
     case q: return x;
@@ -88,7 +88,7 @@ function rank(score, interval) {
  * @return {Integer}
  */
 
-function roundToClosestNaturalPower(val, factor) {
+function round(val, factor) {
   var n = val.toString().length;
   var multiple = Math.pow(10, n - 2) * (factor * 2);
   var rounded = Math.ceil(val / multiple) * multiple;
